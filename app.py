@@ -13,6 +13,7 @@ st.set_page_config(
 )
 
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE & VISIBILITY ---
+# --- CUSTOM CSS FOR SIDEBAR TOGGLE, VISIBILITY & CALENDAR FIX ---
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -75,13 +76,6 @@ st.markdown("""
             color: #1C1C1C !important;
             background-color: #FFFFFF !important;
         }
-        div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {
-            background-color: #FFFFFF !important;
-        }
-        li[role="option"] span, li[role="option"] {
-            color: #1C1C1C !important;
-            background-color: #FFFFFF !important;
-        }
 
         /* Fix for File Uploader "Browse files" Button */
         [data-testid="stFileUploader"] {
@@ -107,16 +101,36 @@ st.markdown("""
             color: #1C1C1C !important;
         }
 
-        /* Fix for Calendar / Date Input Popover */
-        div[data-baseweb="calendar"], div[data-baseweb="calendar"] * {
+        /* --- ENHANCED CALENDAR / DATE PICKER FIX FOR STREAMLIT CLOUD --- */
+        div[data-baseweb="popover"], 
+        div[data-baseweb="calendar"], 
+        div[data-baseweb="menu"], 
+        div[role="dialog"] {
             background-color: #FFFFFF !important;
             color: #1C1C1C !important;
         }
+        
+        div[data-baseweb="calendar"] * {
+            background-color: #FFFFFF !important;
+            color: #1C1C1C !important;
+        }
+
+        div[data-baseweb="calendar"] button {
+            color: #1C1C1C !important;
+            background-color: transparent !important;
+        }
+        
         div[aria-roledescription="calendar"] {
             background-color: #FFFFFF !important;
         }
+        
         div[role="gridcell"] {
             color: #1C1C1C !important;
+            background-color: #FFFFFF !important;
+        }
+
+        div[role="gridcell"]:hover {
+            background-color: #EFECE1 !important;
         }
 
         /* Info & Success Message Boxes */
