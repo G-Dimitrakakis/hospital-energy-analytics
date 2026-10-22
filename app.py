@@ -13,7 +13,6 @@ st.set_page_config(
 )
 
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE & VISIBILITY ---
-# --- CUSTOM CSS FOR SIDEBAR TOGGLE, VISIBILITY & CALENDAR FIX ---
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -179,17 +178,12 @@ st.markdown("""
 
 # --- HIGUCHI & HURST FUNCTION ---
 def estimate_higuchi_hurst(ts, minimal=11):
-    """
-    Calculates Hurst Exponent & Fractal Dimension using the Higuchi Method
-    based on signal integration (cumsum) for fGn time series.
-    """
     ts = np.asarray(ts, dtype=np.float64)
     N = len(ts)
     
     if N < minimal * 2:
         return 0.5, 1.5, np.array([1]), np.array([1]), 0, 0
 
-    # Cumulative Sum (fGn -> fBm)
     Y = np.cumsum(ts - np.mean(ts))
     
     Lm, Cm = [], []
@@ -249,18 +243,15 @@ if uploaded_file is not None:
     df_raw.columns = df_raw.columns.str.strip()
     cols = list(df_raw.columns)
     
-    # Αυτόματος εντοπισμός προεπιλεγμένων ευρετηρίων (Default Indices)
     default_time_idx = next((i for i, c in enumerate(cols) if any(k in c.lower() for k in ['time', 'date', 'ώρα', 'ημερομηνία', 'timestamp'])), 0)
     default_load_idx = next((i for i, c in enumerate(cols) if any(k in c.lower() for k in ['load', 'kwh', 'kw', 'κατανάλωση', 'energy', 'power', 'val']) and i != default_time_idx), min(1, len(cols) - 1))
     
-    # Πτυσσόμενο πλαίσιο επιλογής στηλών (Expander)
     with st.sidebar.expander("Column Mapping Configuration", expanded=False):
         selected_time_col = st.selectbox("Timestamp Column:", options=cols, index=default_time_idx)
         selected_load_col = st.selectbox("Load/Consumption Column:", options=cols, index=default_load_idx)
 
-    # Δημιουργία επεξεργασμένου DataFrame
     df = df_raw.rename(columns={selected_time_col: 'timestamp', selected_load_col: 'load_kwh'}).copy()
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], format='mixed', errors='coerce')
     df['load_kwh'] = pd.to_numeric(df['load_kwh'], errors='coerce')
     df = df.dropna(subset=['timestamp', 'load_kwh'])
 
@@ -298,7 +289,7 @@ def apply_plotly_theme(fig):
 # --- TABS LAYOUT ---
 tab_kpi, tab_ts, tab_fractal, tab_advanced = st.tabs([
     "Overview & KPIs", 
-    "Time Series & Profiles", 
+    "Time Series Analytics", 
     "Fractal Analysis", 
     "Heatmaps & LDC"
 ])
@@ -393,7 +384,7 @@ with tab_kpi:
     - **Total Cost:** €{total_cost:,.2f} | **Total CO₂ Footprint:** {total_co2/1000:,.2f} metric tons.
     """)
 
-# === TAB 2: TIME SERIES & PROFILES ===
+# === TAB 2: TIME SERIES ANALYTICS ===
 with tab_ts:
     st.subheader("Interactive Time Series")
     
@@ -438,22 +429,6 @@ with tab_ts:
     fig_ts.update_traces(line_color=PLOT_COLOR_LINE)
     fig_ts = apply_plotly_theme(fig_ts)
     st.plotly_chart(fig_ts, use_container_width=True)
-
-    st.subheader("Average 24-Hour Profile (Weekdays vs Weekends)")
-    filtered_df_copy = filtered_df.copy()
-    filtered_df_copy['hour'] = filtered_df_copy['timestamp'].dt.hour
-    filtered_df_copy['is_weekend'] = filtered_df_copy['timestamp'].dt.dayofweek >= 5
-    filtered_df_copy['day_type'] = filtered_df_copy['is_weekend'].map({True: 'Weekend', False: 'Weekday'})
-
-    profile = filtered_df_copy.groupby(['hour', 'day_type'])['load_kwh'].mean().reset_index()
-
-    fig_profile = px.line(profile, x='hour', y='load_kwh', color='day_type',
-                          title="Average Daily Load Pattern",
-                          labels={'hour': 'Hour of Day (0-23)', 'load_kwh': 'Average Load (kWh)'},
-                          color_discrete_map={'Weekday': PLOT_COLOR_LINE, 'Weekend': PLOT_COLOR_ACCENT},
-                          markers=True)
-    fig_profile = apply_plotly_theme(fig_profile)
-    st.plotly_chart(fig_profile, use_container_width=True)
 
 # === TAB 3: FRACTAL ANALYSIS ===
 with tab_fractal:
